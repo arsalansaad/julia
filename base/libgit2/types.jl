@@ -1102,11 +1102,10 @@ mutable struct SSHCredentials <: AbstractCredentials
     pass::String
     prvkey::String
     pubkey::String
-    usesshagent::String  # used for ssh-agent authentication
     prompt_if_incorrect::Bool    # Whether to allow interactive prompting if the credentials are incorrect
     count::Int
     function SSHCredentials(u::AbstractString,p::AbstractString,prvkey::AbstractString,pubkey::AbstractString,prompt_if_incorrect::Bool=false)
-        c = new(u,p,prvkey,pubkey,"Y",prompt_if_incorrect,3)
+        c = new(u,p,prvkey,pubkey,prompt_if_incorrect,3)
         finalizer(c, securezero!)
         return c
     end
@@ -1161,13 +1160,14 @@ instances will be used when the URL has changed.
 mutable struct CredentialPayload <: Payload
     credential::Nullable{AbstractCredentials}
     cache::Nullable{CachedCredentials}
+    use_ssh_agent::Char
     scheme::String
     username::String
     host::String
     path::String
 
     function CredentialPayload(credential::Nullable{<:AbstractCredentials}, cache::Nullable{CachedCredentials})
-        new(credential, cache, "", "", "", "")
+        new(credential, cache, 'Y', "", "", "", "")
     end
 end
 
