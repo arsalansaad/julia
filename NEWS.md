@@ -95,6 +95,9 @@ Language changes
   * Prefix `&` for by-reference arguments to `ccall` has been deprecated in favor of
     `Ref` argument types ([#6080]).
 
+  * The `RevString` type for lazily reversed strings has been moved to the LegacyStrings
+    package ([#22611]).
+
 Breaking changes
 ----------------
 
@@ -1264,6 +1267,7 @@ Command-line option changes
 [#22532]: https://github.com/JuliaLang/julia/issues/22532
 [#22588]: https://github.com/JuliaLang/julia/issues/22588
 [#22605]: https://github.com/JuliaLang/julia/issues/22605
+[#22611]: https://github.com/JuliaLang/julia/issues/22611
 [#22666]: https://github.com/JuliaLang/julia/issues/22666
 [#22696]: https://github.com/JuliaLang/julia/issues/22696
 [#22703]: https://github.com/JuliaLang/julia/issues/22703

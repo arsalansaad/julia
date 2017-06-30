@@ -1,6 +1,6 @@
 # This file is a part of Julia. License is MIT: https://julialang.org/license
 
-# SubString and RevString types
+# SubString type
 
 ## substrings reference original strings ##
 
@@ -97,25 +97,12 @@ function unsafe_convert(::Type{Ptr{R}}, s::SubString{String}) where R<:Union{Int
     convert(Ptr{R}, pointer(s.string)) + s.offset
 end
 
-## reversed strings without data movement ##
-
-struct RevString{T<:AbstractString} <: AbstractString
-    string::T
-end
-
-endof(s::RevString) = endof(s.string)
-length(s::RevString) = length(s.string)
-sizeof(s::RevString) = sizeof(s.string)
-
-function next(s::RevString, i::Int)
-    n = endof(s); j = n-i+1
-    (s.string[j], n-prevind(s.string,j)+1)
-end
+## reversed strings ##
 
 """
     reverse(s::AbstractString) -> AbstractString
 
-Reverses a string.
+Reverse a string.
 
 # Examples
 ```jldoctest
@@ -123,8 +110,7 @@ julia> reverse("JuliaLang")
 "gnaLailuJ"
 ```
 """
-reverse(s::AbstractString) = RevString(s)
-reverse(s::RevString) = s.string
+reverse(s::AbstractString) = reverse(convert(String, s))
 
 ## reverse an index i so that reverse(s)[i] == s[reverseind(s,i)]
 
@@ -148,7 +134,6 @@ Julia
 """
 reverseind(s::AbstractString, i) = chr2ind(s, length(s) + 1 - ind2chr(reverse(s), i))
 reverseind(s::Union{DirectIndexString,SubString{DirectIndexString}}, i::Integer) = length(s) + 1 - i
-reverseind(s::RevString, i::Integer) = endof(s) - i + 1
 reverseind(s::SubString{String}, i::Integer) =
     reverseind(s.string, nextind(s.string, endof(s.string))-s.offset-s.endof+i-1) - s.offset
 
