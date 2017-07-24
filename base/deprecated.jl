@@ -1738,6 +1738,17 @@ import .Iterators.enumerate
 @deprecate enumerate(i::IndexLinear,    A::AbstractArray)  pairs(i, A)
 @deprecate enumerate(i::IndexCartesian, A::AbstractArray)  pairs(i, A)
 
+# PR #22932
+@deprecate +(a::Number, b::AbstractArray) broadcast(+, a, b)
+@deprecate +(a::AbstractArray, b::Number) broadcast(+, a, b)
+@deprecate -(a::Number, b::AbstractArray) broadcast(-, a, b)
+@deprecate -(a::AbstractArray, b::Number) broadcast(-, a, b)
+
+@deprecate +(a::Dates.GeneralPeriod, b::StridedArray{<:Dates.GeneralPeriod}) broadcast(+, a, b)
+@deprecate +(a::StridedArray{<:Dates.GeneralPeriod}, b::Dates.GeneralPeriod) broadcast(+, a, b)
+@deprecate -(a::Dates.GeneralPeriod, b::StridedArray{<:Dates.GeneralPeriod}) broadcast(-, a, b)
+@deprecate -(a::StridedArray{<:Dates.GeneralPeriod}, b::Dates.GeneralPeriod) broadcast(-, a, b)
+
 # END 0.7 deprecations
 
 # BEGIN 1.0 deprecations
