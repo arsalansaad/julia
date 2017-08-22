@@ -557,4 +557,4 @@ julia> ascii("abcdefgh")
 "abcdefgh"
 ```
 """
-ascii(x::AbstractString) = ascii(convert(String, x))
+ascii(x::AbstractString) = ascii(String(x))
