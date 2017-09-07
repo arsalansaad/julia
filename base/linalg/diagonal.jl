@@ -49,12 +49,12 @@ Diagonal(V::AbstractVector{T}) where {T} = Diagonal{T,typeof(V)}(V)
 Diagonal{T}(V::AbstractVector{T}) where {T} = Diagonal{T,typeof(V)}(V)
 Diagonal{T}(V::AbstractVector) where {T} = Diagonal{T}(convert(AbstractVector{T}, V))
 
-convert(::Type{Diagonal{T}}, D::Diagonal{T}) where {T} = D
-convert(::Type{Diagonal{T}}, D::Diagonal) where {T} = Diagonal{T}(convert(AbstractVector{T}, D.diag))
-convert(::Type{AbstractMatrix{T}}, D::Diagonal) where {T} = convert(Diagonal{T}, D)
-convert(::Type{Matrix}, D::Diagonal) = diagm(D.diag)
-convert(::Type{Array}, D::Diagonal) = convert(Matrix, D)
-full(D::Diagonal) = convert(Array, D)
+Diagonal{T}(D::Diagonal{T}) where {T} = D
+Diagonal{T}(D::Diagonal) where {T} = Diagonal{T}(convert(AbstractVector{T}, D.diag))
+AbstractMatrix{T}(D::Diagonal) where {T} = Diagonal{T}(D)
+Matrix(D::Diagonal) = diagm(D.diag)
+Array(D::Diagonal) = Matrix(D)
+full(D::Diagonal) = Array(D)
 
 function similar(D::Diagonal, ::Type{T}) where T
     return Diagonal{T}(similar(D.diag, T))

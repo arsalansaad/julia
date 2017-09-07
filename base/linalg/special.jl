@@ -3,47 +3,40 @@
 # Methods operating on different special matrix types
 
 # Interconversion between special matrix types
-convert(::Type{Bidiagonal}, A::Diagonal) =
-    Bidiagonal(A.diag, fill!(similar(A.diag, length(A.diag)-1), 0), :U)
-convert(::Type{SymTridiagonal}, A::Diagonal) =
-    SymTridiagonal(A.diag, fill!(similar(A.diag, length(A.diag)-1), 0))
-convert(::Type{Tridiagonal}, A::Diagonal) =
-    Tridiagonal(fill!(similar(A.diag, length(A.diag)-1), 0), A.diag,
-                fill!(similar(A.diag, length(A.diag)-1), 0))
+Bidiagonal(A::Diagonal) = Bidiagonal(A.diag, fill!(similar(A.diag, length(A.diag)-1), 0), :U)
+SymTridiagonal(A::Diagonal) = SymTridiagonal(A.diag, fill!(similar(A.diag, length(A.diag)-1), 0))
+Tridiagonal(A::Diagonal) = Tridiagonal(fill!(similar(A.diag, length(A.diag)-1), 0), A.diag,
+                                       fill!(similar(A.diag, length(A.diag)-1), 0))
 
-function convert(::Type{Diagonal}, A::Union{Bidiagonal, SymTridiagonal})
+function Diagonal(A::Union{Bidiagonal, SymTridiagonal})
     if !iszero(A.ev)
         throw(ArgumentError("matrix cannot be represented as Diagonal"))
     end
     Diagonal(A.dv)
 end
 
-function convert(::Type{SymTridiagonal}, A::Bidiagonal)
+function SymTridiagonal(A::Bidiagonal)
     if !iszero(A.ev)
         throw(ArgumentError("matrix cannot be represented as SymTridiagonal"))
     end
     SymTridiagonal(A.dv, A.ev)
 end
 
-convert(::Type{Tridiagonal}, A::Bidiagonal{T}) where {T} =
-    Tridiagonal(A.uplo == 'U' ? fill!(similar(A.ev), 0) : A.ev, A.dv,
-                A.uplo == 'U' ? A.ev : fill!(similar(A.ev), 0))
-
-function convert(::Type{Bidiagonal}, A::SymTridiagonal)
+function Bidiagonal(A::SymTridiagonal)
     if !iszero(A.ev)
         throw(ArgumentError("matrix cannot be represented as Bidiagonal"))
     end
     Bidiagonal(A.dv, A.ev, :U)
 end
 
-function convert(::Type{Diagonal}, A::Tridiagonal)
+function Diagonal(A::Tridiagonal)
     if !(iszero(A.dl) && iszero(A.du))
         throw(ArgumentError("matrix cannot be represented as Diagonal"))
     end
     Diagonal(A.d)
 end
 
-function convert(::Type{Bidiagonal}, A::Tridiagonal)
+function Bidiagonal(A::Tridiagonal)
     if iszero(A.dl)
         return Bidiagonal(A.d, A.du, :U)
     elseif iszero(A.du)
@@ -53,25 +46,25 @@ function convert(::Type{Bidiagonal}, A::Tridiagonal)
     end
 end
 
-function convert(::Type{SymTridiagonal}, A::Tridiagonal)
+function SymTridiagonal(A::Tridiagonal)
     if A.dl != A.du
         throw(ArgumentError("matrix cannot be represented as SymTridiagonal"))
     end
     SymTridiagonal(A.d, A.dl)
 end
 
-function convert(::Type{Tridiagonal}, A::SymTridiagonal)
+function Tridiagonal(A::SymTridiagonal)
     Tridiagonal(copy(A.ev), A.dv, A.ev)
 end
 
-function convert(::Type{Diagonal}, A::AbstractTriangular)
+function Diagonal(A::AbstractTriangular)
     if full(A) != diagm(diag(A))
         throw(ArgumentError("matrix cannot be represented as Diagonal"))
     end
     Diagonal(diag(A))
 end
 
-function convert(::Type{Bidiagonal}, A::AbstractTriangular)
+function Bidiagonal(A::AbstractTriangular)
     fA = full(A)
     if fA == diagm(diag(A)) + diagm(diag(fA, 1), 1)
         return Bidiagonal(diag(A), diag(fA,1), :U)
@@ -82,10 +75,9 @@ function convert(::Type{Bidiagonal}, A::AbstractTriangular)
     end
 end
 
-convert(::Type{SymTridiagonal}, A::AbstractTriangular) =
-    convert(SymTridiagonal, convert(Tridiagonal, A))
+SymTridiagonal(A::AbstractTriangular) = SymTridiagonal(Tridiagonal(A))
 
-function convert(::Type{Tridiagonal}, A::AbstractTriangular)
+function Tridiagonal(A::AbstractTriangular)
     fA = full(A)
     if fA == diagm(diag(A)) + diagm(diag(fA, 1), 1) + diagm(diag(fA, -1), -1)
         return Tridiagonal(diag(fA, -1), diag(A), diag(fA,1))

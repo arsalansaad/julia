@@ -47,14 +47,14 @@ end
 
 copy(A::LQ) = LQ(copy(A.factors), copy(A.τ))
 
-convert(::Type{LQ{T}},A::LQ) where {T} = LQ(convert(AbstractMatrix{T}, A.factors), convert(Vector{T}, A.τ))
-convert(::Type{Factorization{T}}, A::LQ{T}) where {T} = A
-convert(::Type{Factorization{T}}, A::LQ) where {T} = convert(LQ{T}, A)
-convert(::Type{AbstractMatrix}, A::LQ) = A[:L]*A[:Q]
-convert(::Type{AbstractArray}, A::LQ) = convert(AbstractMatrix, A)
-convert(::Type{Matrix}, A::LQ) = convert(Array, convert(AbstractArray, A))
-convert(::Type{Array}, A::LQ) = convert(Matrix, A)
-full(A::LQ) = convert(AbstractArray, A)
+LQ{T}(A::LQ) where {T} = LQ(convert(AbstractMatrix{T}, A.factors), convert(Vector{T}, A.τ))
+Factorization{T}(A::LQ{T}) where {T} = A
+Factorization{T}(A::LQ) where {T} = LQ{T}(A)
+AbstractMatrix(A::LQ) = A[:L]*A[:Q]
+AbstractArray(A::LQ) = AbstractMatrix(A)
+Matrix(A::LQ) = Array(AbstractArray(A))
+Array(A::LQ) = Matrix(A)
+full(A::LQ) = AbstractArray(A)
 
 adjoint(A::LQ{T}) where {T} = QR{T,typeof(A.factors)}(A.factors', A.τ)
 
@@ -86,10 +86,10 @@ function show(io::IO, C::LQ)
     show(io, C[:Q])
 end
 
-convert(::Type{LQPackedQ{T}}, Q::LQPackedQ) where {T} = LQPackedQ(convert(AbstractMatrix{T}, Q.factors), convert(Vector{T}, Q.τ))
-convert(::Type{AbstractMatrix{T}}, Q::LQPackedQ) where {T} = convert(LQPackedQ{T}, Q)
-convert(::Type{Matrix}, A::LQPackedQ) = LAPACK.orglq!(copy(A.factors),A.τ)
-convert(::Type{Array}, A::LQPackedQ) = convert(Matrix, A)
+LQPackedQ{T}( Q::LQPackedQ) where {T} = LQPackedQ(convert(AbstractMatrix{T}, Q.factors), convert(Vector{T}, Q.τ))
+AbstractMatrix{T}(Q::LQPackedQ) where {T} = LQPackedQ{T}(Q)
+Matrix(A::LQPackedQ) = LAPACK.orglq!(copy(A.factors),A.τ)
+Array(A::LQPackedQ) = Matrix(A)
 function full(A::LQPackedQ{T}; thin::Bool = true) where T
     #= We construct the full eye here, even though it seems inefficient, because
     every element in the output matrix is a function of all the elements of
@@ -98,7 +98,7 @@ function full(A::LQPackedQ{T}; thin::Bool = true) where T
     explicitly constructing Q, rather than using the ldiv or mult methods,
     may be a wasteful allocation. =#
     if thin
-        convert(Array, A)
+        Array(A)
     else
         A_mul_B!(A, eye(T, size(A.factors,2), size(A.factors,1)))
     end
@@ -124,15 +124,15 @@ A_mul_B!(A::LQ{T}, B::QR{T}) where {T<:BlasFloat} = A[:L]*LAPACK.ormlq!('L','N',
 A_mul_B!(A::QR{T}, B::LQ{T}) where {T<:BlasFloat} = A_mul_B!(zeros(full(A)), full(A), full(B))
 function *(A::LQ{TA}, B::StridedVecOrMat{TB}) where {TA,TB}
     TAB = promote_type(TA, TB)
-    A_mul_B!(convert(Factorization{TAB},A), copy_oftype(B, TAB))
+    A_mul_B!(Factorization{TAB}(A), copy_oftype(B, TAB))
 end
 function *(A::LQ{TA},B::QR{TB}) where {TA,TB}
     TAB = promote_type(TA, TB)
-    A_mul_B!(convert(Factorization{TAB},A), convert(Factorization{TAB},B))
+    A_mul_B!(Factorization{TAB}(A), Factorization{TAB}(B))
 end
 function *(A::QR{TA},B::LQ{TB}) where {TA,TB}
     TAB = promote_type(TA, TB)
-    A_mul_B!(convert(Factorization{TAB},A), convert(Factorization{TAB},B))
+    A_mul_B!(Factorization{TAB}(A), Factorization{TAB}(B))
 end
 
 ## Multiplication by Q
@@ -140,7 +140,7 @@ end
 A_mul_B!(A::LQPackedQ{T}, B::StridedVecOrMat{T}) where {T<:BlasFloat} = LAPACK.ormlq!('L','N',A.factors,A.τ,B)
 function (*)(A::LQPackedQ, B::StridedVecOrMat)
     TAB = promote_type(eltype(A), eltype(B))
-    A_mul_B!(convert(AbstractMatrix{TAB}, A), copy_oftype(B, TAB))
+    A_mul_B!(AbstractMatrix{TAB}(A), copy_oftype(B, TAB))
 end
 
 ### QcB
@@ -149,9 +149,9 @@ Ac_mul_B!(A::LQPackedQ{T}, B::StridedVecOrMat{T}) where {T<:BlasComplex} = LAPAC
 function Ac_mul_B(A::LQPackedQ, B::StridedVecOrMat)
     TAB = promote_type(eltype(A), eltype(B))
     if size(B,1) == size(A.factors,2)
-        Ac_mul_B!(convert(AbstractMatrix{TAB}, A), copy_oftype(B, TAB))
+        Ac_mul_B!(AbstractMatrix{TAB}(A), copy_oftype(B, TAB))
     elseif size(B,1) == size(A.factors,1)
-        Ac_mul_B!(convert(AbstractMatrix{TAB}, A), [B; zeros(TAB, size(A.factors, 2) - size(A.factors, 1), size(B, 2))])
+        Ac_mul_B!(AbstractMatrix{TAB}(A), [B; zeros(TAB, size(A.factors, 2) - size(A.factors, 1), size(B, 2))])
     else
         throw(DimensionMismatch("first dimension of B, $(size(B,1)), must equal one of the dimensions of A, $(size(A))"))
     end
@@ -175,9 +175,9 @@ A_mul_B!(A::StridedMatrix{T}, B::LQPackedQ{T}) where {T<:BlasFloat} = LAPACK.orm
 function *(A::StridedMatrix{TA}, B::LQPackedQ{TB}) where {TA,TB}
     TAB = promote_type(TA,TB)
     if size(B.factors,2) == size(A,2)
-        A_mul_B!(copy_oftype(A, TAB),convert(AbstractMatrix{TAB},B))
+        A_mul_B!(copy_oftype(A, TAB),AbstractMatrix{TAB}(B))
     elseif size(B.factors,1) == size(A,2)
-        A_mul_B!( [A zeros(TAB, size(A,1), size(B.factors,2)-size(B.factors,1))], convert(AbstractMatrix{TAB},B))
+        A_mul_B!( [A zeros(TAB, size(A,1), size(B.factors,2)-size(B.factors,1))], AbstractMatrix{TAB}(B))
     else
         throw(DimensionMismatch("second dimension of A, $(size(A,2)), must equal one of the dimensions of B, $(size(B))"))
     end
@@ -208,7 +208,7 @@ function (\)(A::LQ{TA}, b::StridedVector{Tb}) where {TA,Tb}
     S = promote_type(TA,Tb)
     m = checksquare(A)
     m == length(b) || throw(DimensionMismatch("left hand side has $m rows, but right hand side has length $(length(b))"))
-    AA = convert(Factorization{S}, A)
+    AA = Factorization{S}(A)
     x = A_ldiv_B!(AA, copy_oftype(b, S))
     return x
 end
@@ -216,7 +216,7 @@ function (\)(A::LQ{TA},B::StridedMatrix{TB}) where {TA,TB}
     S = promote_type(TA,TB)
     m = checksquare(A)
     m == size(B,1) || throw(DimensionMismatch("left hand side has $m rows, but right hand side has $(size(B,1)) rows"))
-    AA = convert(Factorization{S}, A)
+    AA = Factorization{S}(A)
     X = A_ldiv_B!(AA, copy_oftype(B, S))
     return X
 end

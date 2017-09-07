@@ -1751,6 +1751,15 @@ import .Iterators.enumerate
 @deprecate enumerate(i::IndexLinear,    A::AbstractArray)  pairs(i, A)
 @deprecate enumerate(i::IndexCartesian, A::AbstractArray)  pairs(i, A)
 
+function (::Type{T})(arg) where {T}
+    if applicable(convert, T, arg)
+        # if `convert` call would not work, just let the method error happen
+        depwarn("Constructors no longer fall back to `convert`. A constructor `$T(::$(typeof(arg)))` should be defined instead.", :Type)
+    end
+    convert(T, arg)::T
+end
+# related items to remove in: abstractarray.jl, dates/periods.jl
+
 # END 0.7 deprecations
 
 # BEGIN 1.0 deprecations
