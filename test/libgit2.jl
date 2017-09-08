@@ -1918,7 +1918,7 @@ mktempdir() do dir
             valid_ex = quote
                 include($LIBGIT2_HELPER_PATH)
                 valid_cred = LibGit2.SSHCredentials($username, $passphrase, $valid_p_key, $(valid_p_key * ".pub"))
-                payload = CredentialPayload(Nullable(valid_cred))
+                payload = CredentialPayload(valid_cred)
                 credential_loop(valid_cred, $url, $username, payload)
             end
 
@@ -1927,7 +1927,7 @@ mktempdir() do dir
                 valid_cred = LibGit2.SSHCredentials($username, $passphrase, $valid_p_key, $(valid_p_key * ".pub"))
                 invalid_cred = LibGit2.SSHCredentials($username, "", $invalid_key, $(invalid_key * ".pub"))
                 invalid_cred.usesshagent = "N"  # Disable SSH agent use
-                payload = CredentialPayload(Nullable(invalid_cred))
+                payload = CredentialPayload(invalid_cred)
                 credential_loop(valid_cred, $url, $username, payload)
             end
 
@@ -1954,7 +1954,7 @@ mktempdir() do dir
             valid_ex = quote
                 include($LIBGIT2_HELPER_PATH)
                 valid_cred = LibGit2.UserPasswordCredentials($valid_username, $valid_password)
-                payload = CredentialPayload(Nullable(valid_cred))
+                payload = CredentialPayload(valid_cred)
                 credential_loop(valid_cred, $url, "", payload)
             end
 
@@ -1962,7 +1962,7 @@ mktempdir() do dir
                 include($LIBGIT2_HELPER_PATH)
                 valid_cred = LibGit2.UserPasswordCredentials($valid_username, $valid_password)
                 invalid_cred = LibGit2.UserPasswordCredentials($invalid_username, $invalid_password)
-                payload = CredentialPayload(Nullable(invalid_cred))
+                payload = CredentialPayload(invalid_cred)
                 credential_loop(valid_cred, $url, "", payload)
             end
 
@@ -1991,7 +1991,7 @@ mktempdir() do dir
                 valid_cred = LibGit2.UserPasswordCredentials($valid_username, $valid_password)
                 cache = CachedCredentials()
                 LibGit2.get_creds!(cache, $cred_id, valid_cred)
-                payload = CredentialPayload(Nullable(cache))
+                payload = CredentialPayload(cache)
                 credential_loop(valid_cred, $url, "", payload)
             end
 
@@ -1999,7 +1999,7 @@ mktempdir() do dir
                 include($LIBGIT2_HELPER_PATH)
                 valid_cred = LibGit2.UserPasswordCredentials($valid_username, $valid_password)
                 cache = CachedCredentials()
-                payload = CredentialPayload(Nullable(cache))
+                payload = CredentialPayload(cache)
                 err, auth_attempts = credential_loop(valid_cred, $url, "", payload)
                 (err, auth_attempts, cache)
             end
@@ -2010,7 +2010,7 @@ mktempdir() do dir
                 invalid_cred = LibGit2.UserPasswordCredentials($invalid_username, $invalid_password, true)
                 cache = CachedCredentials()
                 LibGit2.get_creds!(cache, $cred_id, invalid_cred)
-                payload = CredentialPayload(Nullable(cache))
+                payload = CredentialPayload(cache)
                 err, auth_attempts = credential_loop(valid_cred, $url, "", payload)
                 (err, auth_attempts, cache)
             end
@@ -2050,7 +2050,7 @@ mktempdir() do dir
             expect_ssh_ex = quote
                 include($LIBGIT2_HELPER_PATH)
                 valid_cred = LibGit2.UserPasswordCredentials("foo", "bar")
-                payload = CredentialPayload(Nullable(valid_cred))
+                payload = CredentialPayload(valid_cred)
                 credential_loop(valid_cred, "ssh://github.com/repo", Nullable(""),
                     Cuint(LibGit2.Consts.CREDTYPE_SSH_KEY), payload)
             end
@@ -2059,7 +2059,7 @@ mktempdir() do dir
             expect_https_ex = quote
                 include($LIBGIT2_HELPER_PATH)
                 valid_cred = LibGit2.SSHCredentials("foo", "", "", "")
-                payload = CredentialPayload(Nullable(valid_cred))
+                payload = CredentialPayload(valid_cred)
                 credential_loop(valid_cred, "https://github.com/repo", Nullable(""),
                     Cuint(LibGit2.Consts.CREDTYPE_USERPASS_PLAINTEXT), payload)
             end
@@ -2083,7 +2083,7 @@ mktempdir() do dir
             ex = quote
                 include($LIBGIT2_HELPER_PATH)
                 valid_cred = LibGit2.UserPasswordCredentials("foo", "bar")
-                payload = CredentialPayload(Nullable(valid_cred))
+                payload = CredentialPayload(valid_cred)
                 credential_loop(valid_cred, "foo://github.com/repo", Nullable(""),
                     $allowed_types, payload)
             end
